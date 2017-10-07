@@ -1,0 +1,12 @@
+Source: ubootenv
+Section: admin
+Priority: optional
+Maintainer: Rafal <fatwildcat@gmail.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: http://github.com/rafaello7/ubootenv
+
+Package: ubootenv
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: utility to update u-boot environment on SD card

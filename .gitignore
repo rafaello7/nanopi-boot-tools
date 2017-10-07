@@ -1,0 +1,7 @@
+/debian/debhelper-build-stamp
+/debian/.debhelper/
+/debian/files
+/debian/ubootenv.debhelper.log
+/debian/ubootenv.substvars
+/debian/ubootenv/
+/ubootenv

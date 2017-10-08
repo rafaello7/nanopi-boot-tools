@@ -1,21 +1,47 @@
-# Ubootenv - utility for NanoPi M3 to update u-boot environment on SD card
+## Utilities for NanoPi M3 to install bl1 and u-boot on SD card
 
-The utility allows to read current u-boot environment and set new u-boot
+Package contains utilites that simplify istallation of bl1 and u-boot
+on SD card from running Linux on NanoPi. Currently the package contains
+two utilities:
+
+ * _nano-blembed_ to embed bl1 and u-boot on SD card
+ * _nano-ubootenv_ to update u-boot environment
+
+### Installation
+
+Install _deb_ package using _dpkg -i_ command.
+
+### Utility description
+
+#### nano-blembed
+
+The utility takes one parameter - name of the file to embed on SD card.
+
+To embed bl1:
+
+	nano-blembed bl1-nanopi.bin
+
+To embed u-boot:
+
+	nano-blembed u-boot.bin
+
+
+#### nano-ubootenv
+
+The utility allows to read current u-boot environment and to set new u-boot
 environment from running Linux on NanoPi.
 
-## Usage
+To read current environment:
 
-Read current environment:
-
-	ubootenv r
+	nano-ubootenv r
 
 Optionally an output file name may be specified as second argument:
 
-	ubootenv r envfile.txt
+	nano-ubootenv r envfile.txt
 
 To set new u-boot environment:
 
-	ubootenv w envfile.txt
+	nano-ubootenv w envfile.txt
 
 Environment from _envfile.txt_ completely replaces current u-boot environment.
 If the input file _envfile.txt_ is omitted, environment is read from

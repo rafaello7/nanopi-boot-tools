@@ -1,1 +1,2 @@
-ubootenv /usr/sbin
+nano-blembed  /usr/sbin
+nano-ubootenv /usr/sbin

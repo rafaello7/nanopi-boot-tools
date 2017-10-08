@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: ubootenv
-Source: <http://github.com/rafaello7/ubootenv>
+Upstream-Name: nanopi-boot-tools
+Source: <http://github.com/rafaello7/nanopi-boot-tools>
 
 Files: *
 Copyright: 2017 Rafal <fatwildcat@gmail.com>

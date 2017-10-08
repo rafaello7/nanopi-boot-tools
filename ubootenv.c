@@ -1,31 +1,12 @@
 #include <stdio.h>
 #include <memory.h>
-#include <errno.h>
-#include <stdarg.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-static const char BLKDEV[] = "/dev/mmcblk2";
+#include "common.h"
 
 enum {
 	ENV_OFFSET = 512 * 1024,
 	ENV_SIZE = 4096	// environment size fro u-boot on NanoPi
 };
-
-static void fatal_err(const char *fmt, ...)
-{
-	int err = errno;
-	va_list args;
-
-	va_start(args, fmt);
-	vfprintf(stderr, fmt, args);
-	va_end(args);
-	if( err )
-		fprintf(stderr, ": %s", strerror(err));
-	fprintf(stderr, "\n");
-	exit(1);
-}
 
 static void crccalc(const char *data, unsigned len, char *crcbuf)
 {
@@ -51,13 +32,14 @@ static void readenv(const char *outfname)
 	char buf[ENV_SIZE], crcbuf[4];
 	FILE *fp;
 	int off;
+	const char *blkdev = get_blkdev();
 
-	if( (fp = fopen(BLKDEV, "r")) == NULL )
-		fatal_err("can't open %s for reading", BLKDEV);
+	if( (fp = fopen(blkdev, "r")) == NULL )
+		fatal_err("can't open %s for reading", blkdev);
 	if( fseek(fp, ENV_OFFSET, SEEK_SET) )
-		fatal_err("%s lseek fail", BLKDEV);
+		fatal_err("%s lseek fail", blkdev);
 	if( fread(buf, sizeof(buf), 1, fp) != 1 )
-		fatal_err("%s read fail", BLKDEV);
+		fatal_err("%s read fail", blkdev);
 	fclose(fp);
 	if( outfname ) {
 		if( (fp = fopen(outfname, "w")) == NULL )
@@ -84,19 +66,18 @@ static void writeenv(const char *infname)
 	char buf[ENV_SIZE];
 	FILE *fp;
 	int c, len = 4;
+	const char *blkdev = get_blkdev();
 
 	if( infname ) {
-		if( (fp = fopen(infname, "r+")) == NULL )
+		if( (fp = fopen(infname, "r")) == NULL )
 			fatal_err("unable to open %s for reading", infname);
 	}else
 		fp = stdin;
 	while( (c = fgetc(fp)) != EOF ) {
 		if( c == '\r' )
 			continue;
-		if( len == ENV_SIZE ) {
-			fprintf(stderr, "fatal: environment too long\n");
-			exit(1);
-		}
+		if( len == ENV_SIZE )
+			fatal("fatal: environment too long\n");
 		if( c == '\n' ) {
 			if( len == 0 || buf[len-1] == '\0' )
 				continue;
@@ -108,12 +89,12 @@ static void writeenv(const char *infname)
 		fclose(fp);
 	memset(buf + len, 0, ENV_SIZE - len);
 	crccalc(buf+4, ENV_SIZE-4, buf);
-	if( (fp = fopen(BLKDEV, "w")) == NULL )
-		fatal_err("can't open %s for writing", BLKDEV);
+	if( (fp = fopen(blkdev, "r+")) == NULL )
+		fatal_err("can't open %s for writing", blkdev);
 	if( fseek(fp, ENV_OFFSET, SEEK_SET) )
-		fatal_err("%s lseek fail", BLKDEV);
+		fatal_err("%s lseek fail", blkdev);
 	if( fwrite(buf, sizeof(buf), 1, fp) != 1 )
-		fatal_err("%s write fail", BLKDEV);
+		fatal_err("%s write fail", blkdev);
 	fclose(fp);
 }
 
@@ -122,8 +103,9 @@ int main(int argc, char *argv[])
 	if( argc == 1 || (argv[1][0] != 'r' && argv[1][0] != 'w') ) {
 		printf("\nUtility to update u-boot environment on SD card\n\n");
 		printf("usage:\n");
-		printf("   ubootenv r [<outfile>]\t- print current u-boot environment\n");
-		printf("   ubootenv w [<infile>]\t- set new u-boot environment\n");
+		printf("   nano-ubootenv r [<outfile>]\t- print current "
+				"u-boot environment\n");
+		printf("   nano-ubootenv w [<infile>]\t- set new u-boot environment\n");
 		printf("\n");
 		return 0;
 	}

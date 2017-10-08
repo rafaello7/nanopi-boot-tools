@@ -1,7 +1,9 @@
+*.o
 /debian/debhelper-build-stamp
 /debian/.debhelper/
 /debian/files
-/debian/ubootenv.debhelper.log
-/debian/ubootenv.substvars
-/debian/ubootenv/
-/ubootenv
+/debian/nanopi-boot-tools.debhelper.log
+/debian/nanopi-boot-tools.substvars
+/debian/nanopi-boot-tools/
+/nano-blembed
+/nano-ubootenv

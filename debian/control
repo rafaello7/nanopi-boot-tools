@@ -1,12 +1,14 @@
-Source: ubootenv
+Source: nanopi-boot-tools
 Section: admin
 Priority: optional
 Maintainer: Rafal <fatwildcat@gmail.com>
 Build-Depends: debhelper (>= 9)
 Standards-Version: 3.9.8
-Homepage: http://github.com/rafaello7/ubootenv
+Homepage: http://github.com/rafaello7/nanopi-boot-tools
 
-Package: ubootenv
+Package: nanopi-boot-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: utility to update u-boot environment on SD card
+Description: utilities for NanoPi M3 to manipulate bl1 and u-boot on SD card
+ The package contains utilities to embed bl1 boot loader and u-boot
+ on SD card and to update the u-boot environment.

@@ -1,0 +1,68 @@
+#!/bin/sh
+
+linkboot()
+{
+	[ -h "/boot/$1" -a "$(readlink "/boot/$1")" = "$1-$2" ] && return
+	ln -sf "$1-$2" "/boot/$1"
+}
+
+if [ "$1" = -l ]; then
+    verv=$(readlink /boot/vmlinuz)
+	verv=${verv#vmlinuz-}
+    veri=$(readlink /boot/initrd.img)
+	veri=${veri#initrd.img-}
+    verd=$(readlink /boot/nanopim3.dtb)
+	verd=${veri#nanopim3.dtb-}
+    for i in /boot/vmlinuz-*
+    do
+    	vmlinuz=${i#/boot/}
+    	ver=${vmlinuz#vmlinuz-}
+		if [ "$ver" = "$verv" -o "$ver" = "$veri" -o "$ver" = "$verd" ]; then
+		   	echo " -> $ver"
+		else
+			echo "    $ver"
+		fi
+    	if [ ! -f "/boot/initrd.img-$ver" ]; then
+    		echo "warning: missing initrd.img file for version $ver"
+    	fi
+    	if [ ! -f "/boot/nanopim3.dtb-$ver" ]; then
+    		echo "warning: missing nanopim3.dtb file for version $ver"
+    	fi
+    done
+elif [ "$1" = -s ]; then
+    item=0
+    for i in /boot/vmlinuz-*
+    do
+    	vmlinuz=${i#/boot/}
+    	ver=${vmlinuz#vmlinuz-}
+    	if [ ! -f "/boot/initrd.img-$ver" ]; then
+    		echo "warning: missing initrd.img file for version $ver"
+    	elif [ ! -f "/boot/nanopim3.dtb-$ver" ]; then
+    		echo "warning: missing nanopim3.dtb file for version $ver"
+		else
+    	    item=$((item+1))
+    	    echo " $item) $ver"
+    	    eval k$item=$ver
+		fi
+    done
+    if [ "$item" = 0 ]; then
+    	echo "no kernel image available"
+    	exit
+    fi
+	read -p "please select (1-$item): " choice
+	eval "ver=\$k$choice"
+	[ -n "$ver" ] || { echo unchanged; exit; }
+    linkboot initrd.img $ver
+	linkboot vmlinuz $ver
+    linkboot nanopim3.dtb $ver
+	readlink /boot/vmlinuz | sed -e "s/-/      -> /"
+	readlink /boot/initrd.img | sed -e "s/-/   -> /"
+	readlink /boot/nanopim3.dtb | sed -e "s/-/ -> /"
+else
+	cmd=$(basename $0)
+	echo "usage:"
+	echo "  $cmd -s		- set kernel to boot"
+	echo "  $cmd -l		- show current selection"
+	echo
+fi
+

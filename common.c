@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "common.h"
-#include <mntent.h>
+#include <sys/sysmacros.h>
+#include <sys/stat.h>
 
 
 void fatal(const char *fmt, ...)
@@ -48,32 +49,26 @@ const char *get_blkdev(void)
 			/* NanoPC-T3 without SD card inserted */
 			blkdev = blkdev_emmc;
 		}else{
-			/* NanoPC-T3: determine device using /boot location */
-			struct mntent *ment;
-			FILE *fp = fopen("/etc/fstab", "r");
+			/* NanoPC-T3: determine boot device by /boot location */
+			struct stat st, stdev;
+			char blkpart[40];
+			unsigned boot_minor;
 
-			if( fp != NULL ) {
-				fprintf(stderr, "determinig boot device using /etc/fstab\n");
-				while( (ment = getmntent(fp)) != NULL ) {
-					if( !strcmp(ment->mnt_dir, "/") ||
-							!strcmp(ment->mnt_dir, "/boot") )
-					{
-						if( !strncmp(ment->mnt_fsname, blkdev_sd,
-									strlen(blkdev_sd)) )
-							blkdev = blkdev_sd;
-						else if( !strncmp(ment->mnt_fsname, blkdev_emmc,
-									strlen(blkdev_emmc)) )
-							blkdev = blkdev_emmc;
-						if( !strcmp(ment->mnt_dir, "/boot") )
-							break;
-					}
-				}
-				fclose(fp);
+			if( stat("/boot", &st) < 0 )
+				fatal_err("stat on /boot fail");
+			boot_minor = minor(st.st_dev);
+			sprintf(blkpart, "%sp%d", blkdev_emmc, boot_minor);
+			if( stat(blkpart, &stdev) == 0 && st.st_dev == stdev.st_rdev ) {
+				blkdev = blkdev_emmc;
+			}else{
+				sprintf(blkpart, "%sp%d", blkdev_sd, boot_minor);
+				if( stat(blkpart, &stdev) == 0 && st.st_dev == stdev.st_rdev ) {
+					blkdev = blkdev_sd;
+				}else
+					fatal("unable to determine boot device\n");
 			}
-		}
-		if( blkdev == NULL ) {
-			fprintf(stderr, "unable to determine boot device\n");
-			exit(1);
+			fprintf(stderr, "guess boot device: %s\n",
+					blkdev == blkdev_emmc ? "EMMC" : "SD");
 		}
 	}
 	return blkdev;

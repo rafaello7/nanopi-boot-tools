@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include "common.h"
 
 enum {
@@ -27,12 +28,11 @@ static void crccalc(const char *data, unsigned len, char *crcbuf)
 	crcbuf[3] = crc >> 24;
 }
 
-static void readenv(const char *outfname)
+static void readenv(const char *outfname, const char *blkdev)
 {
 	char buf[ENV_SIZE], crcbuf[4];
 	FILE *fp;
 	int off;
-	const char *blkdev = get_blkdev();
 
 	if( (fp = fopen(blkdev, "r")) == NULL )
 		fatal_err("can't open %s for reading", blkdev);
@@ -61,12 +61,11 @@ static void readenv(const char *outfname)
 		fprintf(stderr, "\nWARN: bad crc\n\n");
 }
 
-static void writeenv(const char *infname)
+static void writeenv(const char *infname, const char *blkdev)
 {
 	char buf[ENV_SIZE];
 	FILE *fp;
 	int c, len = 4;
-	const char *blkdev = get_blkdev();
 
 	if( infname ) {
 		if( (fp = fopen(infname, "r")) == NULL )
@@ -100,19 +99,32 @@ static void writeenv(const char *infname)
 
 int main(int argc, char *argv[])
 {
+	const char *envfile = NULL, *blkdev = NULL;
+	int i;
+
 	if( argc == 1 || (argv[1][0] != 'r' && argv[1][0] != 'w') ) {
 		printf("\nUtility to update u-boot environment on SD card\n\n");
 		printf("usage:\n");
-		printf("   nano-ubootenv r [<outfile>]\t- print current "
-				"u-boot environment\n");
-		printf("   nano-ubootenv w [<infile>]\t- set new u-boot environment\n");
+		printf("   nano-ubootenv r [/dev/mmcblkX] [<outfile>]\t- print current"
+				" u-boot env\n");
+		printf("   nano-ubootenv w [<infile>] [/dev/mmcblkX]\t- set new"
+				" u-boot environment\n");
 		printf("\n");
 		return 0;
 	}
+	for(i = 2; i < argc; ++i) {
+		struct stat st;
+		if( stat(argv[i], &st) == 0 && S_ISBLK(st.st_mode) )
+			blkdev = argv[i];
+		else
+			envfile = argv[i];
+	}
+	if( blkdev == NULL )
+		blkdev = get_blkdev();
 	if( argv[1][0] == 'r' )
-		readenv(argv[2]);
+		readenv(envfile, blkdev);
 	else
-		writeenv(argv[2]);
+		writeenv(envfile, blkdev);
 	return 0;
 }
 

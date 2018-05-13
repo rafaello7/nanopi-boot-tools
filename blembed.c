@@ -12,13 +12,14 @@ static void write32LE(char *addr, unsigned data)
 	addr[3] = (unsigned char)((data >> 24) & 0xff);
 }
 
-static void bl_embed(const char *fname)
+static void bl_embed(const char *fname, const char *blkdev)
 {
 	char buf[512 * 1024];
 	FILE *fp;
 	int off = 512, len, embed_off;
-	const char *blkdev = get_blkdev();
 
+	if( blkdev == NULL )
+		blkdev = get_blkdev();
 	if( (fp = fopen(fname, "r")) == NULL )
 		fatal_err("unable to open %s for reading", fname);
 	if( (len = fread(buf + off, 1, sizeof(buf) - off, fp)) < 0 )
@@ -68,11 +69,11 @@ int main(int argc, char *argv[])
 	if( argc == 1 ) {
 		printf("\nUtility to embed bl1 or u-boot boot loader on SD card\n\n");
 		printf("usage:\n");
-		printf("   nano-blembed <file>\n");
+		printf("   nano-blembed <file> [/dev/mmcblkX]\n");
 		printf("\n");
 		return 0;
 	}
-	bl_embed(argv[1]);
+	bl_embed(argv[1], argv[2]);
 	return 0;
 }
 
